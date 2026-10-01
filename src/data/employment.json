@@ -1,0 +1,38 @@
+[
+  {
+    "Country": "England",
+    "Region": "National",
+    "Institution_Type": "NHS",
+    "Pay_Category": "Agenda for Change",
+    "Spine_Point_or_Role": "Band 5 (Mid)",
+    "Annual_Gross_Salary": 34592,
+    "Year_Valid": "2026/27"
+  },
+  {
+    "Country": "UK",
+    "Region": "National",
+    "Institution_Type": "Armed Forces",
+    "Pay_Category": "Officers",
+    "Spine_Point_or_Role": "RAF Squadron Leader (OF-3)",
+    "Annual_Gross_Salary": 68625,
+    "Year_Valid": "2026/27"
+  },
+  {
+    "Country": "England & Wales",
+    "Region": "National",
+    "Institution_Type": "Police",
+    "Pay_Category": "Federation Rank",
+    "Spine_Point_or_Role": "Constable (Point 4)",
+    "Annual_Gross_Salary": 36336,
+    "Year_Valid": "2026/27"
+  },
+  {
+    "Country": "England",
+    "Region": "Inner London",
+    "Institution_Type": "Mainstream",
+    "Pay_Category": "Qualified Teachers-Main pay range",
+    "Spine_Point_or_Role": "M3",
+    "Annual_Gross_Salary": 40318,
+    "Year_Valid": "2025/26"
+  }
+]
