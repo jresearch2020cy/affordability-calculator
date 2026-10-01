@@ -10,7 +10,7 @@ const { profession, location } = Astro.params;
 
 // Find the matching datasets in milliseconds
 const job = employmentData.find(j => 
-  j.Spine_Point_or_Role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === profession
+  String(j.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === profession
 );
 const loc = propertyData.find(l => 
   l.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === location
