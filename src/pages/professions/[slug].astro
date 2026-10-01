@@ -1,0 +1,53 @@
+---
+import employmentData from '../../data/employment.json';
+
+// This function tells Astro which pages to generate during the build
+export function getStaticPaths() {
+  return employmentData.map((job) => {
+    // Convert "Band 5 (Mid)" into a clean URL like "band-5-mid"
+    const slug = job.Spine_Point_or_Role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    
+    return {
+      params: { slug },
+      props: { job }, // Pass the specific job data to the page
+    };
+  });
+}
+
+// Get the specific job data for the current page
+const { job } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Can a {job.Spine_Point_or_Role} get a mortgage? | UK Affordability</title>
+    <style>
+      body { font-family: system-ui, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
+      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; margin-top: 1rem; }
+      .amount { font-size: 1.5rem; font-weight: bold; color: #2563eb; }
+      a { color: #2563eb; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a href="/">← Back to Home</a>
+    
+    <h1>Mortgage Affordability for: {job.Spine_Point_or_Role}</h1>
+    
+    <div class="card">
+      <p><strong>Institution:</strong> {job.Institution_Type}</p>
+      <p><strong>Base Annual Salary:</strong> £{job.Annual_Gross_Salary.toLocaleString()}</p>
+      
+      <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #e2e8f0;" />
+      
+      <h3>Estimated Borrowing Limits</h3>
+      <ul>
+        <li>Standard (4.0x multiplier): <span class="amount">£{(job.Annual_Gross_Salary * 4.0).toLocaleString()}</span></li>
+        <li>Maximum (4.5x multiplier): <span class="amount">£{(job.Annual_Gross_Salary * 4.5).toLocaleString()}</span></li>
+      </ul>
+    </div>
+  </body>
+</html>
