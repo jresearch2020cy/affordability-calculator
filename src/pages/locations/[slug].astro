@@ -1,0 +1,59 @@
+---
+import propertyData from '../../data/property.json';
+
+export function getStaticPaths() {
+  return propertyData.map((location) => {
+    // Convert "Newcastle upon Tyne" into "newcastle-upon-tyne"
+    const slug = location.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    
+    return {
+      params: { slug },
+      props: { location }, 
+    };
+  });
+}
+
+const { location } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Average House Prices in {location.Region_Name} | UK Affordability</title>
+    <style>
+      body { font-family: system-ui, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; }
+      .amount { font-size: 1.5rem; font-weight: bold; color: #0f172a; }
+      a { color: #2563eb; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+    </style>
+  </head>
+  <body>
+    <a href="/">← Back to Home</a>
+    
+    <h1>Property Market: {location.Region_Name}</h1>
+    <p>Current average housing costs across different property types in this local authority.</p>
+    
+    <div class="grid">
+      <div class="card">
+        <h3>Terraced House</h3>
+        <p class="amount">£{location.Terraced_Average_Price.toLocaleString()}</p>
+      </div>
+      <div class="card">
+        <h3>Semi-Detached</h3>
+        <p class="amount">£{location.Semi_Detached_Average_Price.toLocaleString()}</p>
+      </div>
+      <div class="card">
+        <h3>Detached House</h3>
+        <p class="amount">£{location.Detached_Average_Price.toLocaleString()}</p>
+      </div>
+      <div class="card">
+        <h3>Flat / Apartment</h3>
+        <p class="amount">£{location.Flat_Average_Price.toLocaleString()}</p>
+      </div>
+    </div>
+  </body>
+</html>
