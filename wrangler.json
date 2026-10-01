@@ -1,5 +1,8 @@
 {
   "name": "affordability-calculator",
   "compatibility_date": "2026-10-01",
-  "pages_build_output_dir": "dist"
+  "main": "dist/_worker.js/index.js",
+  "assets": {
+    "directory": "dist"
+  }
 }
