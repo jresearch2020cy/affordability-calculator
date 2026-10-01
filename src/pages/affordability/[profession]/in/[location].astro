@@ -1,0 +1,78 @@
+---
+import employmentData from '../../../../data/employment.json';
+import propertyData from '../../../../data/property.json';
+
+export function getStaticPaths() {
+  const paths = [];
+
+  // Loop through every profession...
+  employmentData.forEach((job) => {
+    const professionSlug = job.Spine_Point_or_Role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+    // ...and multiply it by every location
+    propertyData.forEach((loc) => {
+      const locationSlug = loc.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+      paths.push({
+        params: { profession: professionSlug, location: locationSlug },
+        props: { job, loc }, // Pass both datasets to the page
+      });
+    });
+  });
+
+  return paths;
+}
+
+const { job, loc } = Astro.props;
+
+// Core Math Calculations
+const maxBorrowing = job.Annual_Gross_Salary * 4.5;
+const shortfallTerraced = loc.Terraced_Average_Price - maxBorrowing;
+const depositRequired = shortfallTerraced > 0 ? shortfallTerraced : loc.Terraced_Average_Price * 0.1; // 10% minimum deposit if affordable
+---
+
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Can a {job.Spine_Point_or_Role} buy a house in {loc.Region_Name}? | UK Affordability</title>
+    <style>
+      body { font-family: system-ui, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
+      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; margin-top: 1.5rem; }
+      .amount { font-size: 1.5rem; font-weight: bold; }
+      .success { color: #16a34a; }
+      .warning { color: #dc2626; }
+      a { color: #2563eb; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+      th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
+    </style>
+  </head>
+  <body>
+    <a href="/">← Back to Home</a>
+    
+    <h1>Can a {job.Spine_Point_or_Role} buy a house in {loc.Region_Name}?</h1>
+    <p>Based on a base salary of £{job.Annual_Gross_Salary.toLocaleString()}, the maximum standard mortgage borrowing is <strong>£{maxBorrowing.toLocaleString()}</strong>.</p>
+    
+    <div class="card">
+      <h3>Terraced House Affordability</h3>
+      <table>
+        <tr>
+          <th>Average Property Price</th>
+          <td>£{loc.Terraced_Average_Price.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <th>Maximum Mortgage (4.5x)</th>
+          <td>£{maxBorrowing.toLocaleString()}</td>
+        </tr>
+        <tr>
+          <th>Estimated Deposit Required</th>
+          <td class={shortfallTerraced > (loc.Terraced_Average_Price * 0.2) ? "amount warning" : "amount success"}>
+            £{depositRequired.toLocaleString()}
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
