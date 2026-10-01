@@ -1,0 +1,57 @@
+---
+import employmentData from '../data/employment.json';
+import propertyData from '../data/property.json';
+
+const gaId = "G-QBB4SL0FNH";
+---
+
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UK Housing Affordability & Mortgage Calculator | AffordabilityCalculator.co.uk</title>
+    <meta name="description" content="Calculate mortgage affordability, deposit gaps, and housing costs across UK local authorities based on salary personas and public sector pay scales." />
+    <link rel="canonical" href="https://affordabilitycalculator.co.uk/" />
+
+    <!-- Google Analytics GA4 -->
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+    <script is:inline define:vars={{ gaId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+
+    <style>
+      body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; max-width: 1000px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
+      header { border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 2rem; }
+      h1 { color: #0f172a; font-size: 2.25rem; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; }
+      .stat-number { font-size: 1.875rem; font-weight: bold; color: #2563eb; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>AffordabilityCalculator.co.uk</strong>
+    </header>
+    <main>
+      <h1>UK Housing Affordability Engine</h1>
+      <p>Data-driven mortgage borrowing benchmarks for UK professions, salary points, and local authority housing markets.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Salaries & Professions</h3>
+          <p class="stat-number">{employmentData.length}</p>
+          <p>Standardised salary points across NHS, Teaching, Police, Armed Forces, Civil Service, and Private Sector roles.</p>
+        </div>
+        <div class="card">
+          <h3>Local Authority Markets</h3>
+          <p class="stat-number">{propertyData.length}</p>
+          <p>UK local authority housing datasets tracking detached, semi-detached, terraced, and flat prices.</p>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
