@@ -1,0 +1,26 @@
+[
+  {
+    "Area_Code": "E08000021",
+    "Region_Name": "Newcastle upon Tyne",
+    "Detached_Average_Price": 344809,
+    "Semi_Detached_Average_Price": 223755,
+    "Terraced_Average_Price": 186059,
+    "Flat_Average_Price": 124141
+  },
+  {
+    "Area_Code": "E08000003",
+    "Region_Name": "Manchester",
+    "Detached_Average_Price": 418290,
+    "Semi_Detached_Average_Price": 298102,
+    "Terraced_Average_Price": 234190,
+    "Flat_Average_Price": 196880
+  },
+  {
+    "Area_Code": "E13000001",
+    "Region_Name": "Inner London",
+    "Detached_Average_Price": 1232593,
+    "Semi_Detached_Average_Price": 1093892,
+    "Terraced_Average_Price": 883501,
+    "Flat_Average_Price": 515644
+  }
+]
