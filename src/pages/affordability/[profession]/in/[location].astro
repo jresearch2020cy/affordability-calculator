@@ -2,33 +2,29 @@
 import employmentData from '../../../../data/employment.json';
 import propertyData from '../../../../data/property.json';
 
-export function getStaticPaths() {
-  const paths = [];
+// Tell Astro NOT to build these 1.5 million pages physically
+export const prerender = false;
 
-  // Loop through every profession...
-  employmentData.forEach((job) => {
-    const professionSlug = job.Spine_Point_or_Role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+// Grab the specific slugs from the URL parameters
+const { profession, location } = Astro.params;
 
-    // ...and multiply it by every location
-    propertyData.forEach((loc) => {
-      const locationSlug = loc.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+// Find the matching datasets in milliseconds
+const job = employmentData.find(j => 
+  j.Spine_Point_or_Role.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === profession
+);
+const loc = propertyData.find(l => 
+  l.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === location
+);
 
-      paths.push({
-        params: { profession: professionSlug, location: locationSlug },
-        props: { job, loc }, // Pass both datasets to the page
-      });
-    });
-  });
-
-  return paths;
+// Fallback if a URL doesn't exist
+if (!job || !loc) {
+  return Astro.redirect('/404');
 }
-
-const { job, loc } = Astro.props;
 
 // Core Math Calculations
 const maxBorrowing = job.Annual_Gross_Salary * 4.5;
 const shortfallTerraced = loc.Terraced_Average_Price - maxBorrowing;
-const depositRequired = shortfallTerraced > 0 ? shortfallTerraced : loc.Terraced_Average_Price * 0.1; // 10% minimum deposit if affordable
+const depositRequired = shortfallTerraced > 0 ? shortfallTerraced : loc.Terraced_Average_Price * 0.1;
 ---
 
 <!DOCTYPE html>
