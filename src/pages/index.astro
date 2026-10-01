@@ -50,7 +50,8 @@ const gaId = "G-QBB4SL0FNH";
           <p class="stat-number">{employmentData.length} Indexed</p>
           <ul class="link-list">
             {employmentData.map((job) => {
-const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');              return <li><a href={`/professions/${slug}`}>Mortgage limit for {job.Spine_Point_or_Role}</a></li>
+              const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+              return <li><a href={`/professions/${slug}`}>Mortgage limit for {job.Spine_Point_or_Role}</a></li>
             })}
           </ul>
         </div>
