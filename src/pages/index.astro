@@ -8,43 +8,38 @@ import propertyData from '../data/property.json';
   title="UK Housing Affordability & Mortgage Calculator" 
   description="Calculate realistic mortgage affordability, deposit gaps, and housing costs across UK local authorities based on your specific salary and public sector pay scale."
 >
-  <div style="text-align: center; margin-bottom: 3.5rem; margin-top: 1rem;">
+  <div style="text-align: center; margin-bottom: 2rem; margin-top: 1rem;">
     <h1 style="font-size: 2.75rem; margin-bottom: 1.5rem; letter-spacing: -1px;">Can You Afford to Buy a House?</h1>
     <p style="font-size: 1.25rem; color: #475569; max-width: 800px; margin: 0 auto; line-height: 1.8;">
-      We cross-reference <strong>{employmentData.length.toLocaleString()}</strong> exact UK salaries with local property prices across <strong>{propertyData.length}</strong> regions to give you instant, data-driven mortgage limits and deposit requirements.
+      We cross-reference <strong>{employmentData.length.toLocaleString()}</strong> exact UK salaries with local property prices across <strong>{propertyData.length}</strong> regions to give you instant, data-driven mortgage limits.
     </p>
   </div>
 
-  <div class="card" style="margin-bottom: 3rem; background: #eff6ff; border-color: #bfdbfe;">
-    <h2 style="color: #1e40af; margin-top:0;">How This Engine Works</h2>
-    <p style="color: #1e3a8a; font-size: 1.1rem;">Generic mortgage calculators ask you to guess your limits. We use real-world data instead. We match exact public and private sector pay scales against current HM Land Registry data to answer one critical question: <strong>Where can your specific profession actually afford to buy?</strong></p>
-    <ul style="margin-bottom: 0; padding-left: 1.5rem; color: #1e3a8a; line-height: 1.8;">
-      <li><strong>Step 1:</strong> Find your specific profession, pay band, or regional salary below.</li>
-      <li><strong>Step 2:</strong> Select a local authority to test affordability.</li>
-      <li><strong>Step 3:</strong> Review your exact 4.5x borrowing limit, estimated stamp duty, and real-world deposit shortfalls.</li>
-    </ul>
+  <!-- INTERACTIVE BUILDER BANNER -->
+  <div id="status-banner" style="display: none; background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+    <p id="status-text" style="font-size: 1.25rem; color: #1e3a8a; margin: 0 0 1rem 0;">Select a profession and a location below...</p>
+    <button id="go-btn" style="display: none; margin: 0 auto; padding: 0.75rem 2.5rem; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s;">
+      Calculate Affordability →
+    </button>
   </div>
 
   <div class="grid">
     <!-- PROFESSIONS COLUMN -->
-    <div class="card">
-      <h2>Salaries & Professions</h2>
-      <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">Select your role to view borrowing limits.</p>
+    <div class="card" style="padding: 1.5rem;">
+      <h2 style="margin-bottom: 0.5rem;">1. Select Profession</h2>
+      <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">Click a role below to select it.</p>
       
-      <input 
-        type="text" 
-        id="jobSearch" 
-        placeholder="Filter professions (e.g., 'Band 6', 'Nurse')..." 
-        style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"
-      />
+      <input type="text" id="jobSearch" placeholder="Filter professions (e.g., 'Band 6', 'Nurse')..." style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
       
-      <div style="max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; background: #fff;">
+      <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.5rem; background: #fff;">
         <ul style="list-style: none; padding: 0; margin: 0;" id="jobList">
           {employmentData.map((job) => {
             const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-            return <li class="searchable-job" style="margin-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; font-size: 0.95rem;">
-              <a href={`/professions/${slug}`} style="display: block; font-weight: 600;">{job.Spine_Point_or_Role}</a>
-              <span style="color: #64748b; font-size: 0.85rem;">£{job.Annual_Gross_Salary.toLocaleString()} / yr • {job.Institution_Type} • {job.Region}</span>
+            return <li class="searchable-job" style="margin-bottom: 0.25rem; border-radius: 6px;">
+              <a href={`/professions/${slug}`} class="job-link" data-slug={slug} data-name={job.Spine_Point_or_Role} style="display: block; padding: 0.75rem; text-decoration: none;">
+                <strong style="color: #0f172a; display: block;">{job.Spine_Point_or_Role}</strong>
+                <span style="color: #64748b; font-size: 0.85rem;">£{job.Annual_Gross_Salary.toLocaleString()} • {job.Institution_Type} • {job.Region}</span>
+              </a>
             </li>
           })}
         </ul>
@@ -52,24 +47,21 @@ import propertyData from '../data/property.json';
     </div>
     
     <!-- LOCATIONS COLUMN -->
-    <div class="card">
-      <h2>Local Authority Markets</h2>
-      <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">Select a region to view house prices.</p>
+    <div class="card" style="padding: 1.5rem;">
+      <h2 style="margin-bottom: 0.5rem;">2. Select Location</h2>
+      <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">Click a region to select it.</p>
       
-      <input 
-        type="text" 
-        id="locSearch" 
-        placeholder="Filter locations (e.g., 'Manchester')..." 
-        style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;"
-      />
+      <input type="text" id="locSearch" placeholder="Filter locations (e.g., 'Manchester')..." style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
 
-      <div style="max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; background: #fff;">
+      <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.5rem; background: #fff;">
         <ul style="list-style: none; padding: 0; margin: 0;" id="locList">
           {propertyData.map((location) => {
             const slug = location.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-            return <li class="searchable-loc" style="margin-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.75rem; font-size: 0.95rem;">
-              <a href={`/locations/${slug}`} style="display: block; font-weight: 600;">{location.Region_Name}</a>
-              <span style="color: #64748b; font-size: 0.85rem;">Avg Terraced: £{location.Terraced_Average_Price.toLocaleString()}</span>
+            return <li class="searchable-loc" style="margin-bottom: 0.25rem; border-radius: 6px;">
+              <a href={`/locations/${slug}`} class="loc-link" data-slug={slug} data-name={location.Region_Name} style="display: block; padding: 0.75rem; text-decoration: none;">
+                <strong style="color: #0f172a; display: block;">{location.Region_Name}</strong>
+                <span style="color: #64748b; font-size: 0.85rem;">Avg Terraced: £{location.Terraced_Average_Price.toLocaleString()}</span>
+              </a>
             </li>
           })}
         </ul>
@@ -78,20 +70,56 @@ import propertyData from '../data/property.json';
   </div>
 
   <script is:inline>
-    // Independent Job Search
-    document.getElementById('jobSearch').addEventListener('input', function(e) {
+    // 1. Search Filters
+    document.getElementById('jobSearch').addEventListener('input', e => {
       const term = e.target.value.toLowerCase();
-      document.querySelectorAll('.searchable-job').forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none';
+      document.querySelectorAll('.searchable-job').forEach(item => item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none');
+    });
+    document.getElementById('locSearch').addEventListener('input', e => {
+      const term = e.target.value.toLowerCase();
+      document.querySelectorAll('.searchable-loc').forEach(item => item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none');
+    });
+
+    // 2. Interactive Selection Logic
+    let selectedJob = null;
+    let selectedLoc = null;
+    const statusBanner = document.getElementById('status-banner');
+    const statusText = document.getElementById('status-text');
+    const goBtn = document.getElementById('go-btn');
+
+    document.querySelectorAll('.job-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault(); // Stop normal link navigation
+        document.querySelectorAll('.searchable-job').forEach(li => li.style.background = 'transparent');
+        e.currentTarget.parentElement.style.background = '#e0f2fe';
+        selectedJob = { slug: e.currentTarget.dataset.slug, name: e.currentTarget.dataset.name };
+        updateStatus();
       });
     });
 
-    // Independent Location Search
-    document.getElementById('locSearch').addEventListener('input', function(e) {
-      const term = e.target.value.toLowerCase();
-      document.querySelectorAll('.searchable-loc').forEach(item => {
-        item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none';
+    document.querySelectorAll('.loc-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault(); // Stop normal link navigation
+        document.querySelectorAll('.searchable-loc').forEach(li => li.style.background = 'transparent');
+        e.currentTarget.parentElement.style.background = '#e0f2fe';
+        selectedLoc = { slug: e.currentTarget.dataset.slug, name: e.currentTarget.dataset.name };
+        updateStatus();
       });
     });
+
+    function updateStatus() {
+      statusBanner.style.display = 'block';
+      if (selectedJob && selectedLoc) {
+        statusText.innerHTML = `Calculate affordability for a <strong>${selectedJob.name}</strong> buying in <strong>${selectedLoc.name}</strong>`;
+        goBtn.style.display = 'block';
+        goBtn.onclick = () => window.location.href = `/affordability/${selectedJob.slug}/in/${selectedLoc.slug}`;
+      } else if (selectedJob) {
+        statusText.innerHTML = `<strong>${selectedJob.name}</strong> selected. Now select a location ➔`;
+        goBtn.style.display = 'none';
+      } else if (selectedLoc) {
+        statusText.innerHTML = `<strong>${selectedLoc.name}</strong> selected. ⬅ Now select a profession`;
+        goBtn.style.display = 'none';
+      }
+    }
   </script>
 </Layout>
