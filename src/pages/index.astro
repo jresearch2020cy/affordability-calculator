@@ -25,6 +25,16 @@ import propertyData from '../data/property.json';
     </ul>
   </div>
 
+  <!-- SEARCH BAR -->
+  <div style="margin-bottom: 2rem;">
+    <input 
+      type="text" 
+      id="searchBox" 
+      placeholder="Type to search for a profession (e.g., 'Band 6', 'Major') or location (e.g., 'Manchester')..." 
+      style="width: 100%; padding: 1rem; font-size: 1.1rem; border: 2px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;"
+    />
+  </div>
+
   <div class="grid">
     <div class="card">
       <h2>Salaries & Professions</h2>
@@ -34,7 +44,7 @@ import propertyData from '../data/property.json';
         <ul style="list-style: none; padding: 0; margin: 0;">
           {employmentData.map((job) => {
             const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-            return <li style="margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+            return <li class="searchable-item" style="margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
               <a href={`/professions/${slug}`} style="display: block; padding: 0.25rem 0;">Mortgage limit for {job.Spine_Point_or_Role}</a>
             </li>
           })}
@@ -50,7 +60,7 @@ import propertyData from '../data/property.json';
         <ul style="list-style: none; padding: 0; margin: 0;">
           {propertyData.map((location) => {
             const slug = location.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-            return <li style="margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+            return <li class="searchable-item" style="margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
               <a href={`/locations/${slug}`} style="display: block; padding: 0.25rem 0;">House prices in {location.Region_Name}</a>
             </li>
           })}
@@ -58,4 +68,20 @@ import propertyData from '../data/property.json';
       </div>
     </div>
   </div>
+
+  <script is:inline>
+    document.getElementById('searchBox').addEventListener('input', function(e) {
+      const term = e.target.value.toLowerCase();
+      const items = document.querySelectorAll('.searchable-item');
+      
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(term)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+  </script>
 </Layout>
