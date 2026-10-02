@@ -1,14 +1,21 @@
 ---
 import propertyData from '../../data/property.json';
 
-export function getStaticPaths() {
-  return propertyData.map((location) => {
-    // Convert "Newcastle upon Tyne" into "newcastle-upon-tyne"
-    const slug = location.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    
+export async function getStaticPaths() {
+  const uniqueSlugs = new Set();
+  
+  return propertyData.filter(loc => {
+    const slug = loc.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    if (uniqueSlugs.has(slug)) {
+      return false; // Skip duplicates
+    }
+    uniqueSlugs.add(slug);
+    return true; // Keep unique
+  }).map(loc => {
+    const slug = loc.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     return {
       params: { slug },
-      props: { location }, 
+      props: { location: loc }
     };
   });
 }
