@@ -6,7 +6,6 @@ import propertyData from '../../../../data/property.json';
 export const prerender = false;
 
 const { profession, location } = Astro.params;
-// Read property type from URL (defaults to terraced)
 const propertyTypeParam = Astro.url.searchParams.get('type') || 'terraced';
 
 const job = employmentData.find(j => String(j.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === profession);
@@ -14,27 +13,25 @@ const loc = propertyData.find(l => l.Region_Name.toLowerCase().replace(/[^a-z0-9
 
 if (!job || !loc) return Astro.redirect('/404');
 
-// Helper to make job names readable
-function getJobName(job) {
-  const name = String(job.Spine_Point_or_Role);
-  if (job.Institution_Type === 'Mainstream' || job.Institution_Type === 'Sixth-form') {
-    const cat = String(job.Pay_Category || '').toLowerCase();
+// Clean job name
+function getJobName(jobRow) {
+  const name = String(jobRow.Spine_Point_or_Role);
+  const type = String(jobRow.Institution_Type);
+  if (type === 'Mainstream' || type === 'Sixth-form') {
+    const cat = String(jobRow.Pay_Category || '').toLowerCase();
     if (cat.includes('unqualified')) return `Unqualified Teacher (Point ${name})`;
     if (cat.includes('main')) return `Teacher - Main Pay Range (${name})`;
     if (cat.includes('upper')) return `Teacher - Upper Pay Range (${name})`;
     if (cat.includes('lead')) return `Lead Practitioner Teacher (Point ${name})`;
     if (cat.includes('leadership')) return `Leadership Teacher (${name})`;
-    return `Teacher - ${job.Pay_Category} (${name})`;
+    return `Teacher - ${jobRow.Pay_Category} (${name})`;
   }
-  if (job.Institution_Type === 'NHS' && !name.toLowerCase().includes('nhs')) {
-    return `NHS ${name}`;
-  }
+  if (type === 'NHS' && !name.toLowerCase().includes('nhs')) return `NHS ${name}`;
   return name;
 }
-
 const displayName = getJobName(job);
 
-// Determine active property price based on URL
+// Setup Property Type
 let targetProperty = loc.Terraced_Average_Price;
 let propertyTypeLabel = "terraced house";
 
@@ -49,13 +46,15 @@ if (propertyTypeParam === 'flat') {
   propertyTypeLabel = "detached house";
 }
 
-// Core Financial Math (Forced Rounding)
+// Financial Math
 const maxBorrowing = Math.round(job.Annual_Gross_Salary * 4.5);
-const depositRequired = Math.round(Math.max(targetProperty - maxBorrowing, targetProperty * 0.1)); 
+const rawShortfall = targetProperty - maxBorrowing;
+const minimumTenPercent = targetProperty * 0.1;
+const depositRequired = Math.round(Math.max(rawShortfall, minimumTenPercent)); 
 const mortgageAmount = Math.round(targetProperty - depositRequired);
 const monthlyGross = Math.round(job.Annual_Gross_Salary / 12);
 
-// Regional Stamp Duty Tax Logic
+// Stamp Duty
 function calculateTax(price, isFTB, btl = false) {
   let surcharge = btl ? 0.05 : 0; 
   if (job.Country === 'Scotland') {
@@ -98,24 +97,30 @@ function calculatePMT(rate, years, principal) {
 const rates = [4, 5, 6, 7];
 const terms = [25, 30, 35, 40];
 
-// Linkable Alternative Properties
-const alternativeProperties = [
+// Alternatives Generator
+const rawAlternatives = [
   { type: "Flat", slug: "flat", price: loc.Flat_Average_Price },
   { type: "Terraced", slug: "terraced", price: loc.Terraced_Average_Price },
   { type: "Semi-Detached", slug: "semi", price: loc.Semi_Detached_Average_Price },
   { type: "Detached", slug: "detached", price: loc.Detached_Average_Price }
-].filter(p => p.price > 0 && p.slug !== propertyTypeParam).map(prop => {
-  const dep = Math.round(Math.max(prop.price - maxBorrowing, prop.price * 0.1));
-  const isAffordable = dep <= (prop.price * 0.25); // Affordable if deposit is 25% or less
-  return { ...prop, deposit: dep, isAffordable };
-});
+];
+
+const alternativeProperties = [];
+for (const prop of rawAlternatives) {
+  if (prop.price > 0 && prop.slug !== propertyTypeParam) {
+    const dep = Math.round(Math.max(prop.price - maxBorrowing, prop.price * 0.1));
+    const twentyFivePercent = prop.price * 0.25;
+    const isAffordable = dep <= twentyFivePercent;
+    alternativeProperties.push({ ...prop, deposit: dep, isAffordable });
+  }
+}
 ---
 
 <Layout 
   title={`Can a ${displayName} afford a ${propertyTypeLabel} in ${loc.Region_Name}? | UK Affordability`} 
   description={`Analysis of mortgage limits, deposit requirements, and stamp duty for a ${displayName} earning £${job.Annual_Gross_Salary.toLocaleString()} buying a ${propertyTypeLabel} in ${loc.Region_Name}.`}
 >
-  <a href="/" style="display: inline-block; margin-bottom: 1.5rem; font-weight: bold;">← Back to Calculator</a>
+  <a href="/" style="display: inline-block; margin-bottom: 1.5rem; font-weight: bold; color: #2563eb;">← Back to Calculator</a>
 
   <div class="card" style="border-top: 4px solid #2563eb;">
     <h1 style="font-size: 2.25rem; margin-bottom: 1rem; text-transform: capitalize;">Can a {displayName} buy a {propertyTypeLabel} in {loc.Region_Name}?</h1>
@@ -150,7 +155,7 @@ const alternativeProperties = [
 
   <div class="card">
     <h2>Monthly Mortgage Repayments</h2>
-    <p>Estimated monthly payments for a <strong>£{mortgageAmount.toLocaleString()}</strong> mortgage. Percentages show how much of your <strong>gross monthly income (£{Math.round(monthlyGross).toLocaleString()})</strong> goes toward the mortgage.</p>
+    <p>Estimated monthly payments for a <strong>£{mortgageAmount.toLocaleString()}</strong> mortgage. Percentages show how much of your <strong>gross monthly income (£{monthlyGross.toLocaleString()})</strong> goes toward the mortgage.</p>
     
     <div style="overflow-x: auto;">
       <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: center;">
@@ -169,8 +174,8 @@ const alternativeProperties = [
                 const burden = ((pmt / monthlyGross) * 100).toFixed(1);
                 return (
                   <td style="padding: 1rem; border: 1px solid #cbd5e1;">
-                    £{Math.round(pmt).toLocaleString()} / mo<br/>
-                    <span style={`font-size: 0.85rem; font-weight: 500; color: ${burden > 40 ? '#dc2626' : '#16a34a'}`}>({burden}% of gross salary)</span>
+                    <div style="font-size: 1.1rem; font-weight: 500;">£{Math.round(pmt).toLocaleString()} <span style="font-size: 0.85rem; color: #64748b; font-weight: normal;">/ mo</span></div>
+                    <div style={`font-size: 0.85rem; margin-top: 0.25rem; color: ${Number(burden) > 40 ? '#dc2626' : '#16a34a'}`}>({burden}% of gross salary)</div>
                   </td>
                 );
               })}
@@ -186,8 +191,8 @@ const alternativeProperties = [
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
       {alternativeProperties.map(prop => {
         return (
-          <a href={`?type=${prop.slug}`} style={`display: block; text-decoration: none; border: 2px solid ${prop.isAffordable ? '#22c55e' : '#ef4444'}; background: white; padding: 1.5rem; border-radius: 8px; min-width: 200px; transition: transform 0.2s; cursor: pointer; color: inherit;`} onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-            <h4 style="margin: 0 0 0.5rem 0;">{prop.type}</h4>
+          <a href={`?type=${prop.slug}`} style={`display: block; text-decoration: none; border: 2px solid ${prop.isAffordable ? '#22c55e' : '#ef4444'}; background: white; padding: 1.5rem; border-radius: 8px; min-width: 200px; transition: transform 0.2s; cursor: pointer; color: inherit;`}>
+            <h4 style="margin: 0 0 0.5rem 0; color: #0f172a;">{prop.type}</h4>
             <p style="margin: 0; font-size: 0.9rem; color: #64748b;">Avg Price: £{prop.price.toLocaleString()}</p>
             <p style={`margin: 0.5rem 0 0 0; font-weight: bold; color: ${prop.isAffordable ? '#16a34a' : '#dc2626'};`}>
               Deposit: £{prop.deposit.toLocaleString()}
