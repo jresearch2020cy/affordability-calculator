@@ -2,11 +2,12 @@
   "name": "affordability-calculator",
   "type": "module",
   "version": "0.0.1",
-  "scripts": {
+"scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview"
+    "build": "node generate-sitemap.js && astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^11.0.0",
