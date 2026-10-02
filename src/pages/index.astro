@@ -2,6 +2,24 @@
 import Layout from '../layouts/Layout.astro';
 import employmentData from '../data/employment.json';
 import propertyData from '../data/property.json';
+
+// Helper to make job names readable
+function getJobName(job) {
+  const name = String(job.Spine_Point_or_Role);
+  if (job.Institution_Type === 'Mainstream' || job.Institution_Type === 'Sixth-form') {
+    const cat = String(job.Pay_Category || '').toLowerCase();
+    if (cat.includes('unqualified')) return `Unqualified Teacher (Point ${name})`;
+    if (cat.includes('main')) return `Teacher - Main Pay Range (${name})`;
+    if (cat.includes('upper')) return `Teacher - Upper Pay Range (${name})`;
+    if (cat.includes('lead')) return `Lead Practitioner Teacher (Point ${name})`;
+    if (cat.includes('leadership')) return `Leadership Teacher (${name})`;
+    return `Teacher - ${job.Pay_Category} (${name})`;
+  }
+  if (job.Institution_Type === 'NHS' && !name.toLowerCase().includes('nhs')) {
+    return `NHS ${name}`;
+  }
+  return name;
+}
 ---
 
 <Layout 
@@ -15,7 +33,6 @@ import propertyData from '../data/property.json';
     </p>
   </div>
 
-  <!-- INTERACTIVE BUILDER BANNER -->
   <div id="status-banner" style="display: none; background: #dbeafe; border: 2px solid #3b82f6; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
     <p id="status-text" style="font-size: 1.25rem; color: #1e3a8a; margin: 0 0 1rem 0;">Select a profession and a location below...</p>
     <button id="go-btn" style="display: none; margin: 0 auto; padding: 0.75rem 2.5rem; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; transition: background 0.2s;">
@@ -24,20 +41,20 @@ import propertyData from '../data/property.json';
   </div>
 
   <div class="grid">
-    <!-- PROFESSIONS COLUMN -->
     <div class="card" style="padding: 1.5rem;">
       <h2 style="margin-bottom: 0.5rem;">1. Select Profession</h2>
       <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">Click a role below to select it.</p>
       
-      <input type="text" id="jobSearch" placeholder="Filter professions (e.g., 'Band 6', 'Nurse')..." style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
+      <input type="text" id="jobSearch" placeholder="Filter professions (e.g., 'Band 6', 'Teacher')..." style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;" />
       
       <div style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.5rem; background: #fff;">
         <ul style="list-style: none; padding: 0; margin: 0;" id="jobList">
           {employmentData.map((job) => {
             const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            const displayName = getJobName(job);
             return <li class="searchable-job" style="margin-bottom: 0.25rem; border-radius: 6px;">
-              <a href={`/professions/${slug}`} class="job-link" data-slug={slug} data-name={job.Spine_Point_or_Role} style="display: block; padding: 0.75rem; text-decoration: none;">
-                <strong style="color: #0f172a; display: block;">{job.Spine_Point_or_Role}</strong>
+              <a href={`/professions/${slug}`} class="job-link" data-slug={slug} data-name={displayName} style="display: block; padding: 0.75rem; text-decoration: none;">
+                <strong style="color: #0f172a; display: block;">{displayName}</strong>
                 <span style="color: #64748b; font-size: 0.85rem;">£{job.Annual_Gross_Salary.toLocaleString()} • {job.Institution_Type} • {job.Region}</span>
               </a>
             </li>
@@ -46,7 +63,6 @@ import propertyData from '../data/property.json';
       </div>
     </div>
     
-    <!-- LOCATIONS COLUMN -->
     <div class="card" style="padding: 1.5rem;">
       <h2 style="margin-bottom: 0.5rem;">2. Select Location</h2>
       <p style="color: #64748b; margin-bottom: 1rem; font-size: 0.9rem;">Click a region to select it.</p>
@@ -70,7 +86,6 @@ import propertyData from '../data/property.json';
   </div>
 
   <script is:inline>
-    // 1. Search Filters
     document.getElementById('jobSearch').addEventListener('input', e => {
       const term = e.target.value.toLowerCase();
       document.querySelectorAll('.searchable-job').forEach(item => item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none');
@@ -80,7 +95,6 @@ import propertyData from '../data/property.json';
       document.querySelectorAll('.searchable-loc').forEach(item => item.style.display = item.textContent.toLowerCase().includes(term) ? '' : 'none');
     });
 
-    // 2. Interactive Selection Logic
     let selectedJob = null;
     let selectedLoc = null;
     const statusBanner = document.getElementById('status-banner');
@@ -89,7 +103,7 @@ import propertyData from '../data/property.json';
 
     document.querySelectorAll('.job-link').forEach(link => {
       link.addEventListener('click', (e) => {
-        e.preventDefault(); // Stop normal link navigation
+        e.preventDefault();
         document.querySelectorAll('.searchable-job').forEach(li => li.style.background = 'transparent');
         e.currentTarget.parentElement.style.background = '#e0f2fe';
         selectedJob = { slug: e.currentTarget.dataset.slug, name: e.currentTarget.dataset.name };
@@ -99,7 +113,7 @@ import propertyData from '../data/property.json';
 
     document.querySelectorAll('.loc-link').forEach(link => {
       link.addEventListener('click', (e) => {
-        e.preventDefault(); // Stop normal link navigation
+        e.preventDefault();
         document.querySelectorAll('.searchable-loc').forEach(li => li.style.background = 'transparent');
         e.currentTarget.parentElement.style.background = '#e0f2fe';
         selectedLoc = { slug: e.currentTarget.dataset.slug, name: e.currentTarget.dataset.name };
