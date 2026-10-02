@@ -1,3 +1,7 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import employmentData from '../../data/employment.json';
+
 export async function getStaticPaths() {
   const uniqueSlugs = new Set();
   
@@ -17,40 +21,47 @@ export async function getStaticPaths() {
   });
 }
 
-// Get the specific job data for the current page
+const { slug } = Astro.params;
 const { job } = Astro.props;
+
+// Function to get clean display name
+function getJobName(jobRow) {
+  const name = String(jobRow.Spine_Point_or_Role);
+  const type = String(jobRow.Institution_Type);
+  
+  if (type === 'Mainstream' || type === 'Sixth-form') {
+    const cat = String(jobRow.Pay_Category || '').toLowerCase();
+    if (cat.includes('unqualified')) return `Unqualified Teacher (Point ${name})`;
+    if (cat.includes('main')) return `Teacher - Main Pay Range (${name})`;
+    if (cat.includes('upper')) return `Teacher - Upper Pay Range (${name})`;
+    if (cat.includes('lead')) return `Lead Practitioner Teacher (Point ${name})`;
+    if (cat.includes('leadership')) return `Leadership Teacher (${name})`;
+    return `Teacher - ${jobRow.Pay_Category} (${name})`;
+  }
+  
+  if (type === 'NHS' && !name.toLowerCase().includes('nhs')) return `NHS ${name}`;
+  return name;
+}
+
+const displayName = getJobName(job);
 ---
 
-<!DOCTYPE html>
-<html lang="en-GB">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Can a {job.Spine_Point_or_Role} get a mortgage? | UK Affordability</title>
-    <style>
-      body { font-family: system-ui, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
-      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; margin-top: 1rem; }
-      .amount { font-size: 1.5rem; font-weight: bold; color: #2563eb; }
-      a { color: #2563eb; text-decoration: none; }
-      a:hover { text-decoration: underline; }
-    </style>
-  </head>
-  <body>
-    <a href="/">← Back to Home</a>
-    
-    <h1>Mortgage Affordability for: {job.Spine_Point_or_Role}</h1>
-    
-    <div class="card">
-      <p><strong>Institution:</strong> {job.Institution_Type}</p>
-      <p><strong>Base Annual Salary:</strong> £{job.Annual_Gross_Salary.toLocaleString()}</p>
-      
-      <hr style="margin: 1.5rem 0; border: 0; border-top: 1px solid #e2e8f0;" />
-      
-      <h3>Estimated Borrowing Limits</h3>
-      <ul>
-        <li>Standard (4.0x multiplier): <span class="amount">£{(job.Annual_Gross_Salary * 4.0).toLocaleString()}</span></li>
-        <li>Maximum (4.5x multiplier): <span class="amount">£{(job.Annual_Gross_Salary * 4.5).toLocaleString()}</span></li>
-      </ul>
-    </div>
-  </body>
-</html>
+<Layout title={`${displayName} Salary & Mortgage Limits | UK Affordability`} description={`Find out how much a ${displayName} can borrow for a mortgage and where in the UK they can afford to buy a property.`}>
+  <a href="/" style="display: inline-block; margin-bottom: 1.5rem; font-weight: bold; color: #2563eb;">← Back to Calculator</a>
+
+  <div class="card" style="border-top: 4px solid #2563eb;">
+    <h1 style="font-size: 2.25rem; margin-bottom: 1rem; text-transform: capitalize;">{displayName} Mortgage & Salary Guide</h1>
+    <p style="font-size: 1.1rem; color: #334155;">
+      A <strong>{displayName}</strong> typically earns a base salary of <strong>£{job.Annual_Gross_Salary.toLocaleString()}</strong> per year. 
+    </p>
+    <p style="font-size: 1.1rem; color: #334155;">
+      Assuming a standard 4.5x mortgage lending multiplier, the maximum borrowing capacity is estimated at <strong>£{Math.round(job.Annual_Gross_Salary * 4.5).toLocaleString()}</strong>.
+    </p>
+  </div>
+  
+  <div style="text-align: center; margin-top: 2rem;">
+    <h2>Where can a {displayName} afford to buy?</h2>
+    <p>Select a region below to see detailed property affordability analysis, deposit requirements, and tax estimates.</p>
+    <a href="/" style="display: inline-block; margin-top: 1rem; padding: 1rem 2rem; background: #2563eb; color: white; border-radius: 8px; text-decoration: none; font-weight: bold;">Use the Affordability Calculator</a>
+  </div>
+</Layout>
