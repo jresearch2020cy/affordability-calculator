@@ -5,7 +5,7 @@ const employmentData = JSON.parse(fs.readFileSync('./src/data/employment.json', 
 const propertyData = JSON.parse(fs.readFileSync('./src/data/property.json', 'utf-8'));
 
 // CHANGE THIS TO YOUR ACTUAL DOMAIN
-const BASE_URL = 'https://www.youraffordabilitydomain.co.uk';
+const BASE_URL = 'https://www.affordabilitycalculator.co.uk';
 
 const getSlug = (str) => String(str).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
