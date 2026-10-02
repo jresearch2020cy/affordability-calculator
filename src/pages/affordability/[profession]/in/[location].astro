@@ -26,7 +26,7 @@ function getJobName(jobRow) {
     if (cat.includes('leadership')) return `Leadership Teacher (${name})`;
     return `Teacher - ${jobRow.Pay_Category} (${name})`;
   }
-  if (type === 'NHS' && !name.toLowerCase().includes('nhs')) return `NHS ${name}`;
+  if (type === 'NHS' && !name.includes('NHS') && !name.includes('nhs')) return `NHS ${name}`;
   return name;
 }
 const displayName = getJobName(job);
@@ -54,31 +54,34 @@ const depositRequired = Math.round(Math.max(rawShortfall, minimumTenPercent));
 const mortgageAmount = Math.round(targetProperty - depositRequired);
 const monthlyGross = Math.round(job.Annual_Gross_Salary / 12);
 
-// Stamp Duty (Rewritten using >= to avoid Astro compiler crash)
+// Stamp Duty (Rewritten using Math.max to avoid ALL < and > symbols)
 function calculateTax(price, isFTB, btl = false) {
   let surcharge = btl ? 0.05 : 0; 
+  let t = 0;
+  
   if (job.Country === 'Scotland') {
-    if (isFTB && 175000 >= price) return 0;
-    let t = 0;
-    if (price > 145000) t += (Math.min(price, 250000) - 145000) * 0.02;
-    if (price > 250000) t += (Math.min(price, 325000) - 250000) * 0.05;
-    if (price > 325000) t += (Math.min(price, 750000) - 325000) * 0.10;
-    if (price > 750000) t += (price - 750000) * 0.12;
+    if (isFTB && 175000 - price >= 0) return 0; // price <= 175000
+    
+    t += Math.max(0, Math.min(price, 250000) - 145000) * 0.02;
+    t += Math.max(0, Math.min(price, 325000) - 250000) * 0.05;
+    t += Math.max(0, Math.min(price, 750000) - 325000) * 0.10;
+    t += Math.max(0, price - 750000) * 0.12;
     return t + (btl ? price * 0.06 : 0); 
+    
   } else if (job.Country === 'Wales') {
-    let t = 0;
-    if (price > 225000) t += (Math.min(price, 400000) - 225000) * 0.06;
-    if (price > 400000) t += (Math.min(price, 750000) - 400000) * 0.075;
-    if (price > 750000) t += (Math.min(price, 1500000) - 750000) * 0.10;
-    if (price > 1500000) t += (price - 1500000) * 0.12;
+    t += Math.max(0, Math.min(price, 400000) - 225000) * 0.06;
+    t += Math.max(0, Math.min(price, 750000) - 400000) * 0.075;
+    t += Math.max(0, Math.min(price, 1500000) - 750000) * 0.10;
+    t += Math.max(0, price - 1500000) * 0.12;
     return t + (btl ? price * 0.04 : 0);
-  } else { 
-    if (isFTB && 425000 >= price && !btl) return 0;
-    if (isFTB && 625000 >= price && !btl) return (price - 425000) * 0.05;
-    let t = 0;
-    if (price > 250000) t += (Math.min(price, 925000) - 250000) * 0.05;
-    if (price > 925000) t += (Math.min(price, 1500000) - 925000) * 0.10;
-    if (price > 1500000) t += (price - 1500000) * 0.12;
+    
+  } else { // England & NI
+    if (isFTB && !btl && 425000 - price >= 0) return 0;
+    if (isFTB && !btl && 625000 - price >= 0) return (price - 425000) * 0.05;
+    
+    t += Math.max(0, Math.min(price, 925000) - 250000) * 0.05;
+    t += Math.max(0, Math.min(price, 1500000) - 925000) * 0.10;
+    t += Math.max(0, price - 1500000) * 0.12;
     return t + (btl ? price * 0.03 : 0);
   }
 }
@@ -107,10 +110,10 @@ const rawAlternatives = [
 
 const alternativeProperties = [];
 for (const prop of rawAlternatives) {
-  if (prop.price > 0 && prop.slug !== propertyTypeParam) {
+  if (prop.price - 0 !== 0 && prop.slug !== propertyTypeParam) {
     const dep = Math.round(Math.max(prop.price - maxBorrowing, prop.price * 0.1));
     const twentyFivePercent = prop.price * 0.25;
-    const isAffordable = twentyFivePercent >= dep; // Rewritten to avoid < sign
+    const isAffordable = twentyFivePercent - dep >= 0; // Avoid < or >
     alternativeProperties.push({ ...prop, deposit: dep, isAffordable });
   }
 }
@@ -175,7 +178,7 @@ for (const prop of rawAlternatives) {
                 return (
                   <td style="padding: 1rem; border: 1px solid #cbd5e1;">
                     <div style="font-size: 1.1rem; font-weight: 500;">£{Math.round(pmt).toLocaleString()} <span style="font-size: 0.85rem; color: #64748b; font-weight: normal;">/ mo</span></div>
-                    <div style={`font-size: 0.85rem; margin-top: 0.25rem; color: ${Number(burden) > 40 ? '#dc2626' : '#16a34a'}`}>({burden}% of gross salary)</div>
+                    <div style={`font-size: 0.85rem; margin-top: 0.25rem; color: ${Number(burden) - 40 > 0 ? '#dc2626' : '#16a34a'}`}>({burden}% of gross salary)</div>
                   </td>
                 );
               })}
