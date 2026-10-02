@@ -1,10 +1,11 @@
----
 import Layout from '../../../../layouts/Layout.astro';
 import employmentData from '../../../../data/employment.json';
 import propertyData from '../../../../data/property.json';
 
+// THIS MUST BE FALSE
 export const prerender = false;
 
+// GRAB PARAMS DIRECTLY (NO getStaticPaths needed!)
 const { profession, location } = Astro.params;
 const propertyTypeParam = Astro.url.searchParams.get('type') || 'terraced';
 
@@ -12,6 +13,9 @@ const job = employmentData.find(j => String(j.Spine_Point_or_Role).toLowerCase()
 const loc = propertyData.find(l => l.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === location);
 
 if (!job || !loc) return Astro.redirect('/404');
+
+// ... rest of the math and calculations ...
+
 
 // Clean job name
 function getJobName(jobRow) {
