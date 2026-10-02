@@ -1,0 +1,63 @@
+---
+const { title, description } = Astro.props;
+const gaId = "G-QBB4SL0FNH";
+---
+
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={`https://affordabilitycalculator.co.uk${Astro.url.pathname}`} />
+
+    <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+    <script is:inline define:vars={{ gaId }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', gaId);
+    </script>
+
+    <style is:global>
+      :root { --bg: #f8fafc; --text: #0f172a; --primary: #2563eb; --border: #e2e8f0; --card: #ffffff; }
+      body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; line-height: 1.6; }
+      main { max-width: 1000px; margin: 0 auto; padding: 2rem; min-height: 80vh; }
+      header { background: var(--card); border-bottom: 1px solid var(--border); padding: 1.25rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+      .logo { font-size: 1.5rem; font-weight: 800; color: var(--text); text-decoration: none; letter-spacing: -0.5px; }
+      footer { background: var(--card); border-top: 1px solid var(--border); padding: 2.5rem 2rem; text-align: center; font-size: 0.875rem; color: #64748b; margin-top: 3rem; }
+      footer a { color: var(--primary); text-decoration: none; margin: 0 0.5rem; }
+      footer a:hover { text-decoration: underline; }
+      .sources { margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); max-width: 800px; margin-inline: auto; line-height: 1.8; }
+      .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+      h1, h2, h3 { line-height: 1.2; margin-top: 0; color: #0f172a; }
+      a { color: var(--primary); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div style="max-width: 1000px; margin: 0 auto;">
+        <a href="/" class="logo">AffordabilityCalculator.co.uk</a>
+      </div>
+    </header>
+    
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <div class="sources">
+        <strong>Data Sources & Recency:</strong> Employment salaries sourced from ONS, NHS Agenda for Change, Armed Forces Pay Review Body, and UK Government Pay Scales. Property data sourced from HM Land Registry. All calculations use the latest available public data validated as of <strong>October 2026</strong>.
+      </div>
+      <div>
+        <a href="/terms">Terms & Conditions</a> | 
+        <a href="/privacy">Privacy Policy</a> | 
+        <a href="/contact">Contact Us</a>
+      </div>
+      <p style="margin-top: 1rem;">© 2026 AffordabilityCalculator.co.uk. For informational purposes only. Not financial advice.</p>
+    </footer>
+  </body>
+</html>
