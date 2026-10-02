@@ -1,72 +1,61 @@
 ---
+import Layout from '../layouts/Layout.astro';
 import employmentData from '../data/employment.json';
 import propertyData from '../data/property.json';
-
-const gaId = "G-QBB4SL0FNH";
 ---
 
-<!DOCTYPE html>
-<html lang="en-GB">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>UK Housing Affordability & Mortgage Calculator | AffordabilityCalculator.co.uk</title>
-    <meta name="description" content="Calculate mortgage affordability, deposit gaps, and housing costs across UK local authorities based on salary personas and public sector pay scales." />
-    <link rel="canonical" href="https://affordabilitycalculator.co.uk/" />
+<Layout 
+  title="UK Housing Affordability & Mortgage Calculator" 
+  description="Calculate realistic mortgage affordability, deposit gaps, and housing costs across UK local authorities based on your specific salary and public sector pay scale."
+>
+  <div style="text-align: center; margin-bottom: 3.5rem; margin-top: 1rem;">
+    <h1 style="font-size: 2.75rem; margin-bottom: 1.5rem; letter-spacing: -1px;">Can You Afford to Buy a House?</h1>
+    <p style="font-size: 1.25rem; color: #475569; max-width: 800px; margin: 0 auto; line-height: 1.8;">
+      We cross-reference <strong>{employmentData.length.toLocaleString()}</strong> exact UK salaries with local property prices across <strong>{propertyData.length}</strong> regions to give you instant, data-driven mortgage limits and deposit requirements.
+    </p>
+  </div>
 
-    <!-- Google Analytics GA4 -->
-    <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
-    <script is:inline define:vars={{ gaId }}>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', gaId);
-    </script>
+  <div class="card" style="margin-bottom: 3rem; background: #eff6ff; border-color: #bfdbfe;">
+    <h2 style="color: #1e40af;">How This Engine Works</h2>
+    <p style="color: #1e3a8a; font-size: 1.1rem;">Generic mortgage calculators ask you to guess your limits. We use real-world data instead. We match exact public and private sector pay scales against current HM Land Registry data to answer one critical question: <strong>Where can your specific profession actually afford to buy?</strong></p>
+    <ul style="margin-bottom: 0; padding-left: 1.5rem; color: #1e3a8a; line-height: 1.8;">
+      <li><strong>Step 1:</strong> Select your specific profession or spine point below.</li>
+      <li><strong>Step 2:</strong> Choose your local authority.</li>
+      <li><strong>Step 3:</strong> See your exact 4.5x borrowing limit and real-world deposit shortfalls.</li>
+    </ul>
+  </div>
 
-    <style>
-      body { font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; max-width: 1000px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
-      header { border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; margin-bottom: 2rem; }
-      h1 { color: #0f172a; font-size: 2.25rem; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; }
-      .stat-number { font-size: 1.875rem; font-weight: bold; color: #2563eb; }
-      .link-list { list-style: none; padding: 0; margin-top: 1.5rem; }
-      .link-list li { margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
-      a { color: #2563eb; text-decoration: none; font-weight: 500; }
-      a:hover { text-decoration: underline; }
-    </style>
-  </head>
-  <body>
-    <header>
-      <strong>AffordabilityCalculator.co.uk</strong>
-    </header>
-    <main>
-      <h1>UK Housing Affordability Engine</h1>
-      <p>Data-driven mortgage borrowing benchmarks for UK professions, salary points, and local authority housing markets.</p>
-
-      <div class="grid">
-        <div class="card">
-          <h3>Salaries & Professions</h3>
-          <p class="stat-number">{employmentData.length} Indexed</p>
-          <ul class="link-list">
-            {employmentData.map((job) => {
-              const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-              return <li><a href={`/professions/${slug}`}>Mortgage limit for {job.Spine_Point_or_Role}</a></li>
-            })}
-          </ul>
-        </div>
-        
-        <div class="card">
-          <h3>Local Authority Markets</h3>
-          <p class="stat-number">{propertyData.length} Indexed</p>
-          <ul class="link-list">
-            {propertyData.map((location) => {
-              const slug = location.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-              return <li><a href={`/locations/${slug}`}>House prices in {location.Region_Name}</a></li>
-            })}
-          </ul>
-        </div>
+  <div class="grid">
+    <div class="card">
+      <h2>Salaries & Professions</h2>
+      <p style="color: #64748b; margin-bottom: 1.5rem;">Select your role to view borrowing limits.</p>
+      
+      <div style="max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #f8fafc;">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {employmentData.map((job) => {
+            const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            return <li style="margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+              <a href={`/professions/${slug}`} style="display: block; padding: 0.25rem 0;">Mortgage limit for {job.Spine_Point_or_Role}</a>
+            </li>
+          })}
+        </ul>
       </div>
-    </main>
-  </body>
-</html>
+    </div>
+    
+    <div class="card">
+      <h2>Local Authority Markets</h2>
+      <p style="color: #64748b; margin-bottom: 1.5rem;">Select a region to view house prices.</p>
+      
+      <div style="max-height: 500px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #f8fafc;">
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          {propertyData.map((location) => {
+            const slug = location.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+            return <li style="margin-bottom: 0.5rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+              <a href={`/locations/${slug}`} style="display: block; padding: 0.25rem 0;">House prices in {location.Region_Name}</a>
+            </li>
+          })}
+        </ul>
+      </div>
+    </div>
+  </div>
+</Layout>
