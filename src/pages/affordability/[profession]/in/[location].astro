@@ -1,11 +1,10 @@
+---
 import Layout from '../../../../layouts/Layout.astro';
 import employmentData from '../../../../data/employment.json';
 import propertyData from '../../../../data/property.json';
 
-// THIS MUST BE FALSE
 export const prerender = false;
 
-// GRAB PARAMS DIRECTLY (NO getStaticPaths needed!)
 const { profession, location } = Astro.params;
 const propertyTypeParam = Astro.url.searchParams.get('type') || 'terraced';
 
@@ -13,9 +12,6 @@ const job = employmentData.find(j => String(j.Spine_Point_or_Role).toLowerCase()
 const loc = propertyData.find(l => l.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === location);
 
 if (!job || !loc) return Astro.redirect('/404');
-
-// ... rest of the math and calculations ...
-
 
 // Clean job name
 function getJobName(jobRow) {
@@ -58,11 +54,11 @@ const depositRequired = Math.round(Math.max(rawShortfall, minimumTenPercent));
 const mortgageAmount = Math.round(targetProperty - depositRequired);
 const monthlyGross = Math.round(job.Annual_Gross_Salary / 12);
 
-// Stamp Duty
+// Stamp Duty (Rewritten using >= to avoid Astro compiler crash)
 function calculateTax(price, isFTB, btl = false) {
   let surcharge = btl ? 0.05 : 0; 
   if (job.Country === 'Scotland') {
-    if (isFTB && price <= 175000) return 0;
+    if (isFTB && 175000 >= price) return 0;
     let t = 0;
     if (price > 145000) t += (Math.min(price, 250000) - 145000) * 0.02;
     if (price > 250000) t += (Math.min(price, 325000) - 250000) * 0.05;
@@ -77,8 +73,8 @@ function calculateTax(price, isFTB, btl = false) {
     if (price > 1500000) t += (price - 1500000) * 0.12;
     return t + (btl ? price * 0.04 : 0);
   } else { 
-    if (isFTB && price <= 425000 && !btl) return 0;
-    if (isFTB && price <= 625000 && !btl) return (price - 425000) * 0.05;
+    if (isFTB && 425000 >= price && !btl) return 0;
+    if (isFTB && 625000 >= price && !btl) return (price - 425000) * 0.05;
     let t = 0;
     if (price > 250000) t += (Math.min(price, 925000) - 250000) * 0.05;
     if (price > 925000) t += (Math.min(price, 1500000) - 925000) * 0.10;
@@ -114,7 +110,7 @@ for (const prop of rawAlternatives) {
   if (prop.price > 0 && prop.slug !== propertyTypeParam) {
     const dep = Math.round(Math.max(prop.price - maxBorrowing, prop.price * 0.1));
     const twentyFivePercent = prop.price * 0.25;
-    const isAffordable = dep <= twentyFivePercent;
+    const isAffordable = twentyFivePercent >= dep; // Rewritten to avoid < sign
     alternativeProperties.push({ ...prop, deposit: dep, isAffordable });
   }
 }
