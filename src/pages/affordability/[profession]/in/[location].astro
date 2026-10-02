@@ -1,74 +1,163 @@
 ---
+import Layout from '../../../../layouts/Layout.astro';
 import employmentData from '../../../../data/employment.json';
 import propertyData from '../../../../data/property.json';
 
-// Tell Astro NOT to build these 1.5 million pages physically
 export const prerender = false;
 
-// Grab the specific slugs from the URL parameters
 const { profession, location } = Astro.params;
 
-// Find the matching datasets in milliseconds
-const job = employmentData.find(j => 
-  String(j.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === profession
-);
-const loc = propertyData.find(l => 
-  l.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === location
-);
+const job = employmentData.find(j => String(j.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === profession);
+const loc = propertyData.find(l => l.Region_Name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') === location);
 
-// Fallback if a URL doesn't exist
-if (!job || !loc) {
-  return Astro.redirect('/404');
+if (!job || !loc) return Astro.redirect('/404');
+
+// Core Financial Math
+const maxBorrowing = job.Annual_Gross_Salary * 4.5;
+const targetProperty = loc.Terraced_Average_Price;
+// Require at least a 10% deposit, or the shortfall if it's larger
+const depositRequired = Math.max(targetProperty - maxBorrowing, targetProperty * 0.1); 
+const mortgageAmount = targetProperty - depositRequired;
+const monthlyGross = job.Annual_Gross_Salary / 12;
+
+// Regional Stamp Duty Tax Logic (England/NI SDLT, Scotland LBTT, Wales LTT)
+function calculateTax(price, isFTB, btl = false) {
+  let surcharge = btl ? 0.05 : 0; // Simplified 5% BTL average
+  if (job.Country === 'Scotland') {
+    if (isFTB && price <= 175000) return 0;
+    let t = 0;
+    if (price > 145000) t += (Math.min(price, 250000) - 145000) * 0.02;
+    if (price > 250000) t += (Math.min(price, 325000) - 250000) * 0.05;
+    if (price > 325000) t += (Math.min(price, 750000) - 325000) * 0.10;
+    if (price > 750000) t += (price - 750000) * 0.12;
+    return t + (btl ? price * 0.06 : 0); // ADS in Scotland
+  } else if (job.Country === 'Wales') {
+    let t = 0;
+    if (price > 225000) t += (Math.min(price, 400000) - 225000) * 0.06;
+    if (price > 400000) t += (Math.min(price, 750000) - 400000) * 0.075;
+    if (price > 750000) t += (Math.min(price, 1500000) - 750000) * 0.10;
+    if (price > 1500000) t += (price - 1500000) * 0.12;
+    return t + (btl ? price * 0.04 : 0);
+  } else { // England & NI
+    if (isFTB && price <= 425000 && !btl) return 0;
+    if (isFTB && price <= 625000 && !btl) return (price - 425000) * 0.05;
+    let t = 0;
+    if (price > 250000) t += (Math.min(price, 925000) - 250000) * 0.05;
+    if (price > 925000) t += (Math.min(price, 1500000) - 925000) * 0.10;
+    if (price > 1500000) t += (price - 1500000) * 0.12;
+    return t + (btl ? price * 0.03 : 0);
+  }
 }
 
-// Core Math Calculations
-const maxBorrowing = job.Annual_Gross_Salary * 4.5;
-const shortfallTerraced = loc.Terraced_Average_Price - maxBorrowing;
-const depositRequired = shortfallTerraced > 0 ? shortfallTerraced : loc.Terraced_Average_Price * 0.1;
+const taxFTB = calculateTax(targetProperty, true);
+const taxStandard = calculateTax(targetProperty, false);
+const taxBTL = calculateTax(targetProperty, false, true);
+
+// PMT Repayment Formula
+function calculatePMT(rate, years, principal) {
+  const r = (rate / 100) / 12;
+  const n = years * 12;
+  return (principal * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+}
+
+const rates = [4, 5, 6, 7];
+const terms = [25, 30, 35, 40];
+
+// Smart Linking Badges
+const otherProperties = [
+  { type: "Flat", price: loc.Flat_Average_Price },
+  { type: "Semi-Detached", price: loc.Semi_Detached_Average_Price },
+  { type: "Detached", price: loc.Detached_Average_Price }
+];
 ---
 
-<!DOCTYPE html>
-<html lang="en-GB">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Can a {job.Spine_Point_or_Role} buy a house in {loc.Region_Name}? | UK Affordability</title>
-    <style>
-      body { font-family: system-ui, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
-      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; margin-top: 1.5rem; }
-      .amount { font-size: 1.5rem; font-weight: bold; }
-      .success { color: #16a34a; }
-      .warning { color: #dc2626; }
-      a { color: #2563eb; text-decoration: none; }
-      a:hover { text-decoration: underline; }
-      table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-      th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; }
-    </style>
-  </head>
-  <body>
-    <a href="/">← Back to Home</a>
-    
-    <h1>Can a {job.Spine_Point_or_Role} buy a house in {loc.Region_Name}?</h1>
-    <p>Based on a base salary of £{job.Annual_Gross_Salary.toLocaleString()}, the maximum standard mortgage borrowing is <strong>£{maxBorrowing.toLocaleString()}</strong>.</p>
-    
+<Layout 
+  title={`Can a ${job.Spine_Point_or_Role} afford a house in ${loc.Region_Name}? | UK Affordability`} 
+  description={`Analysis of mortgage limits, deposit requirements, and stamp duty for a ${job.Spine_Point_or_Role} earning £${job.Annual_Gross_Salary.toLocaleString()} buying property in ${loc.Region_Name}.`}
+>
+  <a href="/" style="display: inline-block; margin-bottom: 1.5rem; font-weight: bold;">← Back to Calculator</a>
+
+  <div class="card" style="border-top: 4px solid #2563eb;">
+    <h1 style="font-size: 2.25rem; margin-bottom: 1rem;">Can a {job.Spine_Point_or_Role} buy a house in {loc.Region_Name}?</h1>
+    <p style="font-size: 1.1rem; color: #334155;">
+      Based on public data, a <strong>{job.Spine_Point_or_Role}</strong> in the {job.Institution_Type} sector earns a gross base salary of <strong>£{job.Annual_Gross_Salary.toLocaleString()}</strong> per year. Assuming a standard 4.5x income multiplier, your maximum mortgage borrowing capacity is estimated at <strong>£{maxBorrowing.toLocaleString()}</strong>.
+    </p>
+    <p style="font-size: 1.1rem; color: #334155;">
+      In <strong>{loc.Region_Name}</strong>, the average terraced house currently costs <strong>£{targetProperty.toLocaleString()}</strong>. To purchase this property, you would need an estimated deposit of <strong>£{depositRequired.toLocaleString()}</strong>.
+    </p>
+  </div>
+
+  <div class="grid">
     <div class="card">
-      <h3>Terraced House Affordability</h3>
-      <table>
-        <tr>
-          <th>Average Property Price</th>
-          <td>£{loc.Terraced_Average_Price.toLocaleString()}</td>
-        </tr>
-        <tr>
-          <th>Maximum Mortgage (4.5x)</th>
-          <td>£{maxBorrowing.toLocaleString()}</td>
-        </tr>
-        <tr>
-          <th>Estimated Deposit Required</th>
-          <td class={shortfallTerraced > (loc.Terraced_Average_Price * 0.2) ? "amount warning" : "amount success"}>
-            £{depositRequired.toLocaleString()}
-          </td>
-        </tr>
+      <h3>Affordability Breakdown</h3>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <tr><th style="text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">Avg Terraced Price</th><td style="text-align: right; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">£{targetProperty.toLocaleString()}</td></tr>
+        <tr><th style="text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">Max Mortgage (4.5x)</th><td style="text-align: right; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">£{maxBorrowing.toLocaleString()}</td></tr>
+        <tr><th style="text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">Est. Deposit Required</th><td style="text-align: right; padding: 0.75rem; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #dc2626; font-size: 1.25rem;">£{depositRequired.toLocaleString()}</td></tr>
       </table>
     </div>
-  </body>
-</html>
+
+    <div class="card">
+      <h3>Estimated Property Tax</h3>
+      <p style="font-size: 0.9rem; color: #64748b; margin-top: 0;">Estimated taxes (SDLT/LBTT/LTT) based on property location.</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+        <tr><th style="text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">First-Time Buyer</th><td style="text-align: right; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">£{taxFTB.toLocaleString()}</td></tr>
+        <tr><th style="text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">Standard Home Mover</th><td style="text-align: right; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">£{taxStandard.toLocaleString()}</td></tr>
+        <tr><th style="text-align: left; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">Buy-to-Let / Additional</th><td style="text-align: right; padding: 0.75rem; border-bottom: 1px solid #e2e8f0;">£{taxBTL.toLocaleString()}</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Monthly Mortgage Repayments</h2>
+    <p>Estimated monthly payments for a <strong>£{mortgageAmount.toLocaleString()}</strong> mortgage. Percentages show how much of your <strong>gross monthly income (£{Math.round(monthlyGross).toLocaleString()})</strong> goes toward the mortgage.</p>
+    
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: center;">
+        <thead>
+          <tr style="background: #f1f5f9;">
+            <th style="padding: 1rem; border: 1px solid #cbd5e1;">Rate</th>
+            {terms.map(t => <th style="padding: 1rem; border: 1px solid #cbd5e1;">{t} Years</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rates.map(rate => (
+            <tr>
+              <td style="padding: 1rem; border: 1px solid #cbd5e1; font-weight: bold;">{rate}%</td>
+              {terms.map(term => {
+                const pmt = calculatePMT(rate, term, mortgageAmount);
+                const burden = ((pmt / monthlyGross) * 100).toFixed(1);
+                return (
+                  <td style="padding: 1rem; border: 1px solid #cbd5e1;">
+                    £{Math.round(pmt).toLocaleString()}<br/>
+                    <span style={`font-size: 0.85rem; color: ${burden > 40 ? '#dc2626' : '#16a34a'}`}>({burden}%)</span>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="background: #f8fafc; text-align: center;">
+    <h2 style="margin-bottom: 1.5rem;">What else can you afford in {loc.Region_Name}?</h2>
+    <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
+      {otherProperties.map(prop => {
+        if (prop.price === 0) return null;
+        const dep = Math.max(prop.price - maxBorrowing, prop.price * 0.1);
+        const isAffordable = dep <= (targetProperty * 0.2); // Green if deposit is manageable
+        return (
+          <div style={`border: 2px solid ${isAffordable ? '#22c55e' : '#ef4444'}; background: white; padding: 1.5rem; border-radius: 8px; min-width: 200px;`}>
+            <h4 style="margin: 0 0 0.5rem 0;">{prop.type}</h4>
+            <p style="margin: 0; font-size: 0.9rem; color: #64748b;">Avg Price: £{prop.price.toLocaleString()}</p>
+            <p style={`margin: 0.5rem 0 0 0; font-weight: bold; color: ${isAffordable ? '#16a34a' : '#dc2626'};`}>
+              Deposit: £{dep.toLocaleString()}
+            </p>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+</Layout>
