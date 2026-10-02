@@ -15,6 +15,7 @@ if (!job || !loc) return Astro.redirect('/404');
 // Core Financial Math
 const maxBorrowing = job.Annual_Gross_Salary * 4.5;
 const targetProperty = loc.Terraced_Average_Price;
+
 // Require at least a 10% deposit, or the shortfall if it's larger
 const depositRequired = Math.max(targetProperty - maxBorrowing, targetProperty * 0.1); 
 const mortgageAmount = targetProperty - depositRequired;
@@ -22,7 +23,7 @@ const monthlyGross = job.Annual_Gross_Salary / 12;
 
 // Regional Stamp Duty Tax Logic (England/NI SDLT, Scotland LBTT, Wales LTT)
 function calculateTax(price, isFTB, btl = false) {
-  let surcharge = btl ? 0.05 : 0; // Simplified 5% BTL average
+  let surcharge = btl ? 0.05 : 0; 
   if (job.Country === 'Scotland') {
     if (isFTB && price <= 175000) return 0;
     let t = 0;
@@ -30,7 +31,7 @@ function calculateTax(price, isFTB, btl = false) {
     if (price > 250000) t += (Math.min(price, 325000) - 250000) * 0.05;
     if (price > 325000) t += (Math.min(price, 750000) - 325000) * 0.10;
     if (price > 750000) t += (price - 750000) * 0.12;
-    return t + (btl ? price * 0.06 : 0); // ADS in Scotland
+    return t + (btl ? price * 0.06 : 0); 
   } else if (job.Country === 'Wales') {
     let t = 0;
     if (price > 225000) t += (Math.min(price, 400000) - 225000) * 0.06;
@@ -38,7 +39,7 @@ function calculateTax(price, isFTB, btl = false) {
     if (price > 750000) t += (Math.min(price, 1500000) - 750000) * 0.10;
     if (price > 1500000) t += (price - 1500000) * 0.12;
     return t + (btl ? price * 0.04 : 0);
-  } else { // England & NI
+  } else { 
     if (isFTB && price <= 425000 && !btl) return 0;
     if (isFTB && price <= 625000 && !btl) return (price - 425000) * 0.05;
     let t = 0;
@@ -63,12 +64,16 @@ function calculatePMT(rate, years, principal) {
 const rates = [4, 5, 6, 7];
 const terms = [25, 30, 35, 40];
 
-// Smart Linking Badges
+// Pre-calculate other property badges to avoid Astro compiler issues
 const otherProperties = [
   { type: "Flat", price: loc.Flat_Average_Price },
   { type: "Semi-Detached", price: loc.Semi_Detached_Average_Price },
   { type: "Detached", price: loc.Detached_Average_Price }
-];
+].map(prop => {
+  const dep = Math.max(prop.price - maxBorrowing, prop.price * 0.1);
+  const isAffordable = dep < (prop.price * 0.25); // Affordable if deposit is under 25%
+  return { ...prop, deposit: dep, isAffordable };
+});
 ---
 
 <Layout 
@@ -146,14 +151,12 @@ const otherProperties = [
     <div style="display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center;">
       {otherProperties.map(prop => {
         if (prop.price === 0) return null;
-        const dep = Math.max(prop.price - maxBorrowing, prop.price * 0.1);
-        const isAffordable = dep <= (targetProperty * 0.2); // Green if deposit is manageable
         return (
-          <div style={`border: 2px solid ${isAffordable ? '#22c55e' : '#ef4444'}; background: white; padding: 1.5rem; border-radius: 8px; min-width: 200px;`}>
+          <div style={`border: 2px solid ${prop.isAffordable ? '#22c55e' : '#ef4444'}; background: white; padding: 1.5rem; border-radius: 8px; min-width: 200px;`}>
             <h4 style="margin: 0 0 0.5rem 0;">{prop.type}</h4>
             <p style="margin: 0; font-size: 0.9rem; color: #64748b;">Avg Price: £{prop.price.toLocaleString()}</p>
-            <p style={`margin: 0.5rem 0 0 0; font-weight: bold; color: ${isAffordable ? '#16a34a' : '#dc2626'};`}>
-              Deposit: £{dep.toLocaleString()}
+            <p style={`margin: 0.5rem 0 0 0; font-weight: bold; color: ${prop.isAffordable ? '#16a34a' : '#dc2626'};`}>
+              Deposit: £{prop.deposit.toLocaleString()}
             </p>
           </div>
         )
