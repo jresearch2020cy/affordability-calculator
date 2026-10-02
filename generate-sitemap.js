@@ -2,7 +2,7 @@ import fs from 'fs';
 import employmentData from './src/data/employment.json' assert { type: 'json' };
 import propertyData from './src/data/property.json' assert { type: 'json' };
 
-const BASE_URL = 'https://www.youraffordabilitydomain.co.uk';
+const BASE_URL = 'https://affordabilitycalculator.co.uk';
 
 // Get unique slugs
 const getSlug = (str) => String(str).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
