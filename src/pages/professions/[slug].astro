@@ -1,14 +1,18 @@
----
-import employmentData from '../../data/employment.json';
-
-// This function tells Astro which pages to generate during the build
-export function getStaticPaths() {
-  return employmentData.map((job) => {
-    // Convert "Band 5 (Mid)" into a clean URL like "band-5-mid"
-const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');    
+export async function getStaticPaths() {
+  const uniqueSlugs = new Set();
+  
+  return employmentData.filter(job => {
+    const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    if (uniqueSlugs.has(slug)) {
+      return false; // Skip duplicates
+    }
+    uniqueSlugs.add(slug);
+    return true; // Keep unique
+  }).map(job => {
+    const slug = String(job.Spine_Point_or_Role).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     return {
       params: { slug },
-      props: { job }, // Pass the specific job data to the page
+      props: { job }
     };
   });
 }
