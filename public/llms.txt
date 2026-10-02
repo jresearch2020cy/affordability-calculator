@@ -1,0 +1,13 @@
+# UK Home Affordability Calculator
+
+> Interactive programmatic calculator for UK mortgage limits, deposit requirements, and stamp duty by profession and location.
+
+## Core Features
+
+- [Main Calculator](https://www.affordabilitycalculator.co.uk/): Calculate home affordability based on salary and region.
+- [Professions Hub](https://www.affordabilitycalculator.co.uk/professions/): Search salary bands and borrowing limits across UK occupations.
+- [Locations Hub](https://www.affordabilitycalculator.co.uk/locations/): View average property prices and regional tax thresholds across the UK.
+
+## Optional
+
+- [Privacy Policy](https://www.affordabilitycalculator.co.uk/privacy/): Information on analytics and data handling.
