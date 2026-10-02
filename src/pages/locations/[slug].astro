@@ -1,4 +1,5 @@
 ---
+import Layout from '../../layouts/Layout.astro';
 import propertyData from '../../data/property.json';
 
 export async function getStaticPaths() {
@@ -20,47 +21,42 @@ export async function getStaticPaths() {
   });
 }
 
+const { slug } = Astro.params;
 const { location } = Astro.props;
 ---
 
-<!DOCTYPE html>
-<html lang="en-GB">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Average House Prices in {location.Region_Name} | UK Affordability</title>
-    <style>
-      body { font-family: system-ui, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #1a1a1a; }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
-      .card { border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 8px; background: #f8fafc; }
-      .amount { font-size: 1.5rem; font-weight: bold; color: #0f172a; }
-      a { color: #2563eb; text-decoration: none; }
-      a:hover { text-decoration: underline; }
-    </style>
-  </head>
-  <body>
-    <a href="/">← Back to Home</a>
-    
-    <h1>Property Market: {location.Region_Name}</h1>
-    <p>Current average housing costs across different property types in this local authority.</p>
-    
-    <div class="grid">
-      <div class="card">
-        <h3>Terraced House</h3>
-        <p class="amount">£{location.Terraced_Average_Price.toLocaleString()}</p>
-      </div>
-      <div class="card">
-        <h3>Semi-Detached</h3>
-        <p class="amount">£{location.Semi_Detached_Average_Price.toLocaleString()}</p>
-      </div>
-      <div class="card">
-        <h3>Detached House</h3>
-        <p class="amount">£{location.Detached_Average_Price.toLocaleString()}</p>
-      </div>
-      <div class="card">
-        <h3>Flat / Apartment</h3>
-        <p class="amount">£{location.Flat_Average_Price.toLocaleString()}</p>
-      </div>
+<Layout title={`Property Affordability in ${location.Region_Name} | UK Guide`} description={`Discover average house prices, deposit requirements, and mortgage affordability for ${location.Region_Name}.`}>
+  <a href="/" style="display: inline-block; margin-bottom: 1.5rem; font-weight: bold; color: #2563eb;">← Back to Calculator</a>
+
+  <div class="card" style="border-top: 4px solid #16a34a;">
+    <h1 style="font-size: 2.25rem; margin-bottom: 1rem; text-transform: capitalize;">Property Prices in {location.Region_Name}</h1>
+    <p style="font-size: 1.1rem; color: #334155;">
+      Current market averages for residential properties in <strong>{location.Region_Name}</strong>.
+    </p>
+  </div>
+  
+  <div class="grid">
+    <div class="card">
+      <h3 style="margin-top: 0;">Terraced House</h3>
+      <p style="font-size: 1.5rem; font-weight: bold; color: #0f172a; margin: 0.5rem 0;">£{location.Terraced_Average_Price.toLocaleString()}</p>
     </div>
-  </body>
-</html>
+    <div class="card">
+      <h3 style="margin-top: 0;">Semi-Detached House</h3>
+      <p style="font-size: 1.5rem; font-weight: bold; color: #0f172a; margin: 0.5rem 0;">£{location.Semi_Detached_Average_Price.toLocaleString()}</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top: 0;">Detached House</h3>
+      <p style="font-size: 1.5rem; font-weight: bold; color: #0f172a; margin: 0.5rem 0;">£{location.Detached_Average_Price.toLocaleString()}</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top: 0;">Flat / Apartment</h3>
+      <p style="font-size: 1.5rem; font-weight: bold; color: #0f172a; margin: 0.5rem 0;">£{location.Flat_Average_Price.toLocaleString()}</p>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 2rem;">
+    <h2>Can you afford to live in {location.Region_Name}?</h2>
+    <p>Select your profession in our calculator to see exact deposit needs and mortgage limits.</p>
+    <a href="/" style="display: inline-block; margin-top: 1rem; padding: 1rem 2rem; background: #16a34a; color: white; border-radius: 8px; text-decoration: none; font-weight: bold;">Check Affordability Now</a>
+  </div>
+</Layout>
